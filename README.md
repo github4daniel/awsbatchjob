@@ -1,29 +1,43 @@
 # aws batch job for S3 log error report
 
-This document outlines a batch job solution for extracting S3 logs error message and send email to development team.
+This architectural design is a batch process designed to extract error messages from the application log files stored in an S3 bucket and subsequently send EMails to the production support team. It utilizes the project [S3 log search](https://github.com/github4daniel/s3logSearch) as search engine. The <B> <I>S3 log search</B></I> is web application doing free text search for the gz file stored in S3 bucket.
+  
 
-### 1. What this project is about
+### 1. Business Requirements
 
-This project is a web application that allows users to manage their tasks and schedules effectively. It provides a user-friendly interface for creating, updating, and organizing tasks, helping users stay organized and productive.
+FluntD collects application logs, archives them, and periodically transfers the archived file to an S3 bucket when the buffer is full. A backend process is required to handle the log information, categorize and generate statistics, and then send Emails to the production support team
 
 ### 2. Design
 
-The design of the application follows a clean and modern aesthetic. The user interface is intuitive, with a focus on simplicity and ease of use. The color scheme promotes a calm and focused environment, enhancing the user's experience.
+The defining characteristics of the application is its on-demand nature, eliminating the necessity for continuous 24/7 operation like traditional service or server. To best align with this requirement, the optimal solution is to leverage AWS Serverless architect for the application. The following architecture diagram is what I propose. 
+
+ <li>Upon FluentD placing a log file into the S3 bucket, the S3 system generate a ObjectPutEvent. The event serves as a trigger for the Lambda function. The Lambda function (S3 Search Engine in diagram) is responsible for extracting pertinent log information from file and subsequently saving into the database.  This Lambda function is similar to S3 log search we implemented.
+ </li></br>
+ <li>
+ AWS EventBridge acts as a time scheduler, trigger a AWS Step Function. The entry Lambda function collects event context, such as the type of error, time lines for log entries and search the error message in log files.
+</li></br>
+<li>
+The first branch of Lambda is dedicated to aggregating and processing error data for email content generation, and utilize AWS Simple Email Service (SES) to send email to recipients.
+The second branch of  Lambda is responsible for aggregating and processing error data as well, but it focus on generating data for the Dashboard.
+</li></br>
 
 ![Step Function](img/awsstepfunction.png)
-*Figure 1: Step Function
 
-## Section: How to Run
+*Figure 1: Architecture Diagram batch Job for S3 log error extraction
 
-### 1. Prerequisites
+### 3. Selection of AWS services
 
-Before running the project, ensure that you have the following prerequisites installed:
-- Node.js v14 or higher
-- npm (Node Package Manager)
+Team has propose other AWS service technologies for evaluation:
 
-### 2. Running the Project
+<li><B>AWS Glue + Athena: </B>
+AWS Glue serves as an ETL (Extract, Transform, Load) tool, dedicated to the preparation and transformation of data. It automatically discovers, catalogs, and transforms data from various sources. AWS Glue use Crawlers for discovering metadata from diverse data sources. Athena functions as a query tool, enabling the selection of subsets of the prepared and transformed data stored in Amazon S3. Together, AWS Glue and Athena contribute to a comprehensive data processing and querying workflow.
 
-1. Clone the repository to your local machine:
+<li><B>AWS Step Function: </B>
+AWS step function is a fully managed AWS web service that enables you to coordinate and orchestrate multiple service into Serverless workflow. It supports parallel processing.
 
-   ```bash
-   git clone https://github.com/your-username/project.git
+<li><B>AWS Batch: </B>
+AWS batch is a fully managed AWS web service that allow you to run batching computing workloads on the AWS cloud.  You can provision EC2 and docker or Serverless Fargate (without provision EC2 instance). The AWS batch is suitable for long running process.  
+
+
+### 4. AWS Service Provision
+Use Terraform as AWS provision tool.
