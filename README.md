@@ -1,4 +1,4 @@
-# aws batch job for S3 log error report
+# aws batch job for S3 log error report  (To be implemented)
 
 This architectural design is a batch process designed to extract error messages from the application log files stored in an S3 bucket and subsequently send EMails to the production support team. It utilizes the project [S3 log search](https://github.com/github4daniel/s3logSearch) as search engine. The <B> <I>S3 log search</B></I> is web application doing free text search for the gz file stored in S3 bucket.
   
