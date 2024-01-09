@@ -11,7 +11,7 @@ FluntD collects application logs, archives them, and periodically transfers the 
 
 The defining characteristics of the application is its on-demand nature, eliminating the necessity for continuous 24/7 operation like traditional service or server. To best align with this requirement, the optimal solution is to leverage AWS Serverless architect for the application. The following architecture diagram is what I propose. 
 
- <li>Upon FluentD placing a log file into the S3 bucket, the S3 system generate a ObjectPutEvent. The event serves as a trigger for the Lambda function. The Lambda function (S3 Search Engine in diagram) is responsible for extracting pertinent log information from file and subsequently saving into the database.  This Lambda function is similar to S3 log search we implemented.
+ <li>Upon FluentD placing a log file into the S3 bucket, the S3 system generate a ObjectPutEvent. The event serves as a trigger for the Lambda function. The Lambda function (S3 Search Engine in diagram) is responsible for extracting pertinent log information from file and subsequently saving into the database.  This Lambda function is similar to S3 log search being implemented.
  </li></br>
  <li>
  AWS EventBridge acts as a time scheduler, trigger a AWS Step Function. The entry Lambda function collects event context, such as the type of error, time lines for log entries and then conduct the search the error message in gz log files.
