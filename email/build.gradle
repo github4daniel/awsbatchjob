@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'software.amazon.awssdk:s3:2.17.23'  // AWS S3 SDK
+    implementation 'org.springframework.boot:spring-boot-starter:2.6.4'  // Spring Boot Web
+    implementation 'commons-dbutils:commons-dbutils:1.7'  // Apache Commons DBUtils
+    runtimeOnly 'org.postgresql:postgresql:42.2.5'  // PostgreSQL JDBC Driver
+}
+
+tasks.register('zipLambda') {
+    dependsOn('build')
+
+    doLast {
+        def buildDir = project.buildDir
+
+        copy {
+            from(buildDir.toPath().resolve('libs'))
+            into(buildDir)
+            include('*.jar')
+        }
+
+        zipTree(buildDir).each { File file ->
+            project.logger.lifecycle("Adding ${file.relativePath}")
+        }
+
+        project.logger.lifecycle("Lambda zip file created at ${buildDir}/lambda.zip")
+    }
+}
+
